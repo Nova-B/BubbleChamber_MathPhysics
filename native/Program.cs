@@ -1,6 +1,6 @@
-// Bubble Chamber — native Windows host.
+// Bubble Chamber · Math × Physics — native Windows host.
 // A single self-contained exe: the web app and the WebView2 SDK DLLs are embedded as app.zip and unpacked
-// to %LOCALAPPDATA%\BubbleChamber on first run. Rendering uses the WebView2 runtime that ships with Windows 10/11.
+// to %LOCALAPPDATA%\BubbleChamber_MathPhysics on first run. Rendering uses the WebView2 runtime that ships with Windows 10/11.
 // Built with the .NET Framework C# 5 compiler (see build.ps1), so no newer language features here.
 using System;
 using System.Drawing;
@@ -16,6 +16,7 @@ using Microsoft.Web.WebView2.WinForms;
 static class Program
 {
     const string Host = "bubblechamber.example";
+    const string Title = "Bubble Chamber · Math × Physics";
     static string dataDir, appDir;
 
     [DllImport("user32.dll")]
@@ -29,12 +30,12 @@ static class Program
         Application.SetCompatibleTextRenderingDefault(false);
         try
         {
-            dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BubbleChamber");
+            dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BubbleChamber_MathPhysics");
             appDir = Unpack();
         }
         catch (Exception e)
         {
-            MessageBox.Show("앱 파일을 준비하지 못했습니다.\n\n" + e.Message, "Bubble Chamber", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show("앱 파일을 준비하지 못했습니다.\n\n" + e.Message, Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
         // the WebView2 assemblies live in the unpacked folder, so resolve them from there
@@ -93,7 +94,7 @@ static class Program
 
         public MainForm(bool startFullscreen)
         {
-            Text = "Bubble Chamber";
+            Text = Title;
             BackColor = Color.Black;
             StartPosition = FormStartPosition.CenterScreen;
             Rectangle wa = Screen.PrimaryScreen.WorkingArea;
@@ -118,7 +119,7 @@ static class Program
             catch (Exception e)
             {
                 MessageBox.Show("WebView2 런타임을 시작할 수 없습니다.\nhttps://developer.microsoft.com/microsoft-edge/webview2/ 에서 런타임을 설치해 주세요.\n\n" + e.Message,
-                    "Bubble Chamber", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Close();
                 return;
             }

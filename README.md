@@ -9,8 +9,8 @@
 ## 실행
 
 - **브라우저**: `index.html` 을 열거나 `start.bat` 실행. 설치·서버·인터넷 불필요.
-- **Windows exe**: PowerShell에서 `native\build.ps1` 실행 → `BubbleChamber.exe` 생성 (단일 파일, 약 620KB).
-  Windows에 기본 포함된 C# 컴파일러와 WebView2 런타임만 사용한다. `BubbleChamber.exe /f` 는 전체화면으로 시작.
+- **Windows exe**: PowerShell에서 `native\build.ps1` 실행 → `BubbleChamber_MathPhysics.exe` 생성 (단일 파일, 약 620KB).
+  Windows에 기본 포함된 C# 컴파일러와 WebView2 런타임만 사용한다. `BubbleChamber_MathPhysics.exe /f` 는 전체화면으로 시작.
 
 | 키 | 동작 |
 |---|---|
