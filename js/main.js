@@ -9,6 +9,9 @@
   let eqTarget = 5, widgetTarget = 3;
   let paused = false, speed = 1, last = performance.now();
   let spawnTimer = 1.2, eventTimer = 0.4;
+  // how strongly tracks are dimmed behind equations/diagrams (B key cycles); 0 = tracks fully visible
+  const BACKINGS = [0.28, 0, 0.8];
+  let backing = 0;
 
   // dust is generated once for the largest size seen, so resizing never reshuffles the specks
   let dustW = 0, dustH = 0;
@@ -71,14 +74,16 @@
     ctx.fillRect(0, 0, PC.W, PC.H);
     ctx.drawImage(dust, 0, 0, dustW, dustH);
     Chamber.draw(ctx);
-    // soft dark backing so equations and diagrams stay readable over dense tracks
-    ctx.save();
-    ctx.fillStyle = '#000'; ctx.shadowColor = '#000'; ctx.shadowBlur = 36;
-    for (const list of [Layout.rects, Layout.fading]) for (const r of list) {
-      ctx.globalAlpha = 0.8 * clamp(r.a);
-      ctx.fillRect(r.x + 6, r.y + 6, r.w - 12, r.h - 12);
+    // faint, wide-feathered dimming behind equations and diagrams — tracks stay visible through it
+    if (BACKINGS[backing] > 0) {
+      ctx.save();
+      ctx.fillStyle = '#000'; ctx.shadowColor = '#000'; ctx.shadowBlur = 60;
+      for (const list of [Layout.rects, Layout.fading]) for (const r of list) {
+        ctx.globalAlpha = BACKINGS[backing] * clamp(r.a);
+        ctx.fillRect(r.x + 16, r.y + 16, r.w - 32, r.h - 32);
+      }
+      ctx.restore();
     }
-    ctx.restore();
     Widgets.draw(ctx);
     requestAnimationFrame(frame);
   }
@@ -87,13 +92,14 @@
   let resizeT, idleT, hudT;
   window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(resize, 150); });
   function showHud(ms) {
-    speedEl.textContent = (paused ? '· 일시정지 ' : '') + (speed !== 1 ? `· ×${speed.toFixed(2)}` : '');
+    speedEl.textContent = (paused ? '· 일시정지 ' : '') + (backing ? `· 배경 어둡게 ${['약하게', '끔', '강하게'][backing]} ` : '') + (speed !== 1 ? `· ×${speed.toFixed(2)}` : '');
     hud.classList.remove('hidden');
     clearTimeout(hudT); hudT = setTimeout(() => hud.classList.add('hidden'), ms);
   }
   window.addEventListener('keydown', (e) => {
     if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); return; }
     if (e.key === ' ') { paused = !paused; e.preventDefault(); }
+    else if (e.key === 'b' || e.key === 'B') backing = (backing + 1) % BACKINGS.length;
     else if (e.key === 'ArrowUp') speed = Math.min(4, speed * 1.25);
     else if (e.key === 'ArrowDown') speed = Math.max(0.25, speed / 1.25);
     else return;

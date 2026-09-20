@@ -432,6 +432,7 @@
       ctx.save();
       ctx.translate(this.rect.x, this.rect.y);
       ctx.scale(this.k, this.k);
+      this.sk.draw(ctx, this.p, this.age, alpha, true);
       ctx.shadowColor = ink(0.55);
       ctx.shadowBlur = 5;
       this.sk.draw(ctx, this.p, this.age, alpha);

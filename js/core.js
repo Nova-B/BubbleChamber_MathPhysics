@@ -89,7 +89,7 @@
     return runs;
   }
 
-  PC.label = function (ctx, str, x, y, size = 13, align = 'c', alpha = 1) {
+  PC.label = function (ctx, str, x, y, size = 13, align = 'c', alpha = 1, halo = false) {
     let runs = labelCache.get(str);
     if (!runs) { runs = parseLabel(str); labelCache.set(str, runs); }
     let cx = 0, prevScript = null, scriptStart = 0;
@@ -111,13 +111,15 @@
     const x0 = align === 'c' ? x - cx / 2 : align === 'r' ? x - cx : x;
     ctx.save();
     ctx.fillStyle = PC.ink(alpha);
-    ctx.strokeStyle = PC.ink(alpha);
+    ctx.strokeStyle = halo ? `rgba(0,0,0,${0.85 * alpha})` : PC.ink(alpha);
+    ctx.lineJoin = 'round';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     runs.forEach((r, i) => {
       const { px, w, sz } = pos[i];
       const dy = r.mode === 'sub' ? size * 0.32 : r.mode === 'sup' ? -size * 0.38 : 0;
       ctx.font = r.italic ? fontI(sz) : fontR(sz);
+      if (halo) { ctx.lineWidth = Math.max(2.5, sz * 0.3); ctx.strokeText(r.txt, x0 + px, y + dy); return; }
       ctx.fillText(r.txt, x0 + px, y + dy);
       if (r.bar) {
         ctx.lineWidth = Math.max(0.7, sz * 0.06);
@@ -160,10 +162,12 @@
     arrow(x, y, ang, t0, size = 6) { this.items.push({ k: 'arrow', x, y, ang, t0, t1: t0, size }); return this; }
     dot(x, y, r, t0) { this.items.push({ k: 'dot', x, y, r, t0, t1: t0 }); return this; }
 
-    draw(ctx, p, time, alpha) {
+    // halo = true draws only a dark outline of every stroke/label: a local knockout that keeps the sketch
+    // legible over bubble tracks without hiding them behind a box
+    draw(ctx, p, time, alpha, halo = false) {
       const clamp = PC.clamp;
-      ctx.strokeStyle = PC.ink(1);
-      ctx.fillStyle = PC.ink(1);
+      ctx.strokeStyle = halo ? 'rgba(0,0,0,0.85)' : PC.ink(1);
+      ctx.fillStyle = ctx.strokeStyle;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       for (const it of this.items) {
@@ -175,14 +179,15 @@
           if (pts.length < 2) continue;
           ctx.save();
           if (it.clip) { ctx.beginPath(); ctx.rect(...it.clip); ctx.clip(); }
-          ctx.globalAlpha = alpha * it.a;
-          ctx.lineWidth = it.lw;
-          if (it.dash) ctx.setLineDash(it.dash);
+          ctx.globalAlpha = halo ? alpha : alpha * it.a;
+          ctx.lineWidth = halo ? it.lw + 4.5 : it.lw;
+          if (it.dash && !halo) ctx.setLineDash(it.dash);
           const cum = f >= 1 ? null : it.fn ? cumLen(pts) : (it.cum || (it.cum = cumLen(pts)));
           tracePartial(ctx, pts, f, cum);
           ctx.stroke();
           ctx.restore();
         } else if (it.k === 'segs') {
+          if (halo) continue;
           const list = typeof it.src === 'function' ? it.src(time) : it.src;
           const n = Math.ceil(list.length * f);
           ctx.save();
@@ -193,8 +198,9 @@
           ctx.stroke();
           ctx.restore();
         } else if (it.k === 'label') {
-          PC.label(ctx, it.str, it.x, it.y, it.size, it.align, alpha * it.a * pop);
+          PC.label(ctx, it.str, it.x, it.y, it.size, it.align, alpha * (halo ? 1 : it.a) * pop, halo);
         } else if (it.k === 'arrow') {
+          if (halo) continue;
           const s = it.size, c = Math.cos(it.ang), sn = Math.sin(it.ang);
           const tx = it.x + c * s * 0.5, ty = it.y + sn * s * 0.5;
           ctx.save();
@@ -207,6 +213,7 @@
           ctx.fill();
           ctx.restore();
         } else if (it.k === 'dot') {
+          if (halo) continue;
           ctx.save();
           ctx.globalAlpha = alpha * pop;
           ctx.beginPath();

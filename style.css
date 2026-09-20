@@ -23,7 +23,9 @@ body.idle { cursor: none; }
   color: #fff7e8;
   white-space: nowrap;
   visibility: hidden;
-  text-shadow: 0 0 7px rgba(255, 244, 220, .38), 0 0 1px rgba(255, 244, 220, .6);
+  /* warm glow on top, then a tight black halo so glyphs read over tracks without a backing box */
+  text-shadow: 0 0 7px rgba(255, 244, 220, .38), 0 0 1px rgba(255, 244, 220, .6),
+    0 0 3px #000, 0 0 5px #000, 0 0 9px rgba(0, 0, 0, .9);
   will-change: opacity;
 }
 .eq-line { width: max-content; }
